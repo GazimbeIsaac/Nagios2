@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $hostname=$ARGV[0];
+
+unless($hostname) {
+	print "No hostname given\n";
+	exit -1;
+}
+
+my $top = "";
+my $lines = -7;
+my $len = 0;
+open(FH, "ssh -oConnectTimeout=3 -oNumberOfPasswordPrompts=0 -oPasswordAuthentication=no -oStrictHostKeyChecking=no root\@$hostname 'TERM=vt220 COLUMNS=512 top -bcn1'|");
+while(<FH>) {
+	$lines++;
+	$_ =~ s/  *$//;
+	$_ =~ s/\|/&124;/g;
+	next if /.*root.*\[.*\]$/;
+	$len += length($_);
+	$top .= $_ if $len <= 40960; # I'm not totally sure what the limit is :-/
+}
+
+print "Total procs: $lines\n$top | procs=$lines;;;";
+exit 0
